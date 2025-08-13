@@ -3,7 +3,7 @@ find_package(fmt CONFIG REQUIRED)
 add_library(core SHARED)
 add_library(mg::core ALIAS core)
 target_sources(core PRIVATE
-    src/test.cpp
+    src/core.cpp
 )
 target_include_directories(core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
