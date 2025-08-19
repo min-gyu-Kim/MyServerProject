@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 6,
   "configurePresets": [
     {
       "name": "linux-base",
@@ -7,6 +7,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;-p=${sourceDir}/build;-quiet;-config-file=${sourceDir}/.clang-tidy",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -88,9 +89,6 @@
         "CPACK_PACKAGE_VERSION": "1.0.0",
         "CPACK_PACKAGE_RELEASE": "1",
         "CPACK_RPM_PACKAGE_LICENSE": "MIT",
-        "CPACK_INSTALL_CMAKE_PROJECTS": [
-          "${sourceDir};${projectName};ALL;/usr/lib/debug"
-        ],
         "CPACK_STRIP_FILES": "OFF"
       }
     }

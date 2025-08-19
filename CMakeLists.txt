@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_SOURCE_DIR};${CMAKE_PROJECT_NAME};ALL;/usr/lib/debug")
+
 add_subdirectory(src)
 
 enable_testing()

@@ -3,6 +3,7 @@
     "version-string": "1.0.0",
     "dependencies": [
         "fmt",
-        "catch2"
+        "catch2",
+        "ms-gsl"
     ]
 }

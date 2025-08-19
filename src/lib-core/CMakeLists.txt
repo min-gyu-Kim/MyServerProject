@@ -1,4 +1,5 @@
 find_package(fmt CONFIG REQUIRED)
+find_package(Microsoft.GSL CONFIG REQUIRED)
 
 add_library(core SHARED)
 add_library(mg::core ALIAS core)
@@ -9,7 +10,7 @@ target_include_directories(core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(core PUBLIC fmt::fmt)
+target_link_libraries(core PUBLIC fmt::fmt Microsoft.GSL::GSL)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_compile_options(core PRIVATE

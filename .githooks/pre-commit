@@ -1,0 +1,13 @@
+#!/bin/sh
+echo ">>> Running pre-commit hook (CMake preset workflow)..."
+
+# 워크플로 실행 (예시: preset 이름이 "dev-workflow"라고 가정)
+cmake --workflow --preset build-and-test-x64-debug
+
+# 워크플로 실패하면 커밋 중단
+if [ $? -ne 0 ]; then
+  echo "Pre-commit hook failed (CMake workflow did not pass)"
+  exit 1
+fi
+
+echo "Pre-commit hook passed"
