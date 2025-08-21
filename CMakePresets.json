@@ -12,7 +12,8 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_MODULE_PATH": "${sourceDir}/cmake"
       }
     },
     {

@@ -1,5 +1,6 @@
-#include "libcore/core.hpp"
+#include "core/core.hpp"
 #include <arpa/inet.h>
+#include <cassert>
 #include <fmt/core.h>
 #include <gsl/gsl>
 #include <stdexcept>
@@ -40,6 +41,14 @@ Scheduler::Scheduler() : m_ring{}
             fmt::format("Failed to create socket: {}", strerror(errno)));
     }
 
+    int optval = 1;
+    if (setsockopt(m_listenFd, SOL_SOCKET, SO_REUSEPORT, &optval,
+                   sizeof(optval)) < 0) {
+        perror("setsockopt SO_REUSEPORT failed");
+        close(m_listenFd);
+        return;
+    }
+
     sockaddr_in listenAddr{};
     listenAddr.sin_family = AF_INET;
     listenAddr.sin_addr.s_addr = INADDR_ANY;
@@ -72,6 +81,8 @@ Scheduler::Scheduler() : m_ring{}
     io_uring_prep_accept(sqe, m_listenFd,
                          reinterpret_cast<struct sockaddr *>(addrPtr),
                          reinterpret_cast<socklen_t *>(&request->mLength), 0);
+    result = io_uring_submit(&m_ring);
+    assert(result >= 0 && "Failed to submit accept request");
 }
 
 Scheduler::~Scheduler()
@@ -96,7 +107,9 @@ void Scheduler::Run()
                 "Failed to wait for completion: {}", strerror(-result)));
         }
 
-        for (int i = 0; i < result; ++i) {
+        const unsigned int EVENT_COUNT =
+            io_uring_peek_batch_cqe(&m_ring, cqes.data(), MAX_CQES);
+        for (unsigned int i = 0; i < EVENT_COUNT; ++i) {
             io_uring_cqe *cqe = cqes.at(i);
 
             if (cqe->res < 0) {
@@ -110,7 +123,7 @@ void Scheduler::Run()
             case eIOType::Accept:
             {
                 /* code */
-                OnAccept(request->mFd, request->mBuffer, request->mLength);
+                OnAccept(cqe->res, request->mBuffer, request->mLength);
 
                 io_uring_sqe *sqe = io_uring_get_sqe(&m_ring);
                 if (nullptr == sqe) {
@@ -193,15 +206,26 @@ void Scheduler::OnRecv(void *request, int transferred)
         return;
     }
 
-    char *data = static_cast<char *>(req->mBuffer);
-    fmt::print("Received data from client {}: {}", req->mFd,
-               std::string(data, transferred));
+    enum class eMessageID : int16_t
+    {
+        EchoMessage = 1,
+    };
 
-    short *packetSize = reinterpret_cast<short *>(data);
-    if (transferred != *packetSize) {
+    struct MessageHeader
+    {
+        eMessageID mId;
+        int16_t mSize;
+        char mData[0]; // Flexible array member
+    };
+
+    MessageHeader *header = static_cast<MessageHeader *>(req->mBuffer);
+    fmt::print("Received data from client {}: {}", req->mFd,
+               std::string(header->mData, header->mSize));
+
+    if (transferred != header->mSize) {
         fmt::print(
             "Received incomplete packet from client {}: expected {}, got {}",
-            req->mFd, *packetSize, transferred);
+            req->mFd, header->mSize, transferred);
     }
 
     io_uring_sqe *sqe = io_uring_get_sqe(&m_ring);

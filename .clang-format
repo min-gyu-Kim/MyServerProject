@@ -6,6 +6,8 @@ IndentWidth: 4             # 필요시 2로 조정
 ContinuationIndentWidth: 4
 NamespaceIndentation: None
 
+#AccessModifierOffset: 0
+
 # 포인터 정렬 스타일
 PointerAlignment: Right
 

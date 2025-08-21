@@ -68,6 +68,8 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "pointers": "cpp"
+        "pointers": "cpp",
+        "iostream": "cpp",
+        "list": "cpp"
     }
 }

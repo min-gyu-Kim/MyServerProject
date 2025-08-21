@@ -31,3 +31,5 @@ CheckOptions:
     value:           CamelCase
   - key:             readability-identifier-naming.GlobalConstantPrefix
     value:           s
+  - key:             readability-identifier-naming.FunctionCase
+    value:           CamelCase

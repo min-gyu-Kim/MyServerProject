@@ -1,9 +1,10 @@
 {
-    "name": "my-server-project",
-    "version-string": "1.0.0",
-    "dependencies": [
-        "fmt",
-        "catch2",
-        "ms-gsl"
-    ]
+  "name": "my-server-project",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "catch2",
+    "fmt",
+    "ms-gsl",
+    "backward-cpp"
+  ]
 }

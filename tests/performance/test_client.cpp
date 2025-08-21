@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <array>
 #include <cassert>
+#include <core/Debug.hpp>
 #include <cstdint>
 #include <cstring>
 #include <fmt/core.h>
@@ -21,6 +22,8 @@ struct MessageHeader
 
 int main()
 {
+
+    ASSERT(false, "Hello");
     int clientFd = socket(AF_INET, SOCK_STREAM, 0);
     if (clientFd == -1) {
         perror("socket");
