@@ -1,17 +1,17 @@
 find_package(fmt CONFIG REQUIRED)
-find_package(Microsoft.GSL CONFIG REQUIRED)
 find_package(Backward CONFIG REQUIRED)
 
 add_library(core SHARED)
 add_library(mg::core ALIAS core)
 target_sources(core PRIVATE
     src/core.cpp
+    src/Logger.cpp
 )
 target_include_directories(core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(core PUBLIC fmt::fmt Microsoft.GSL::GSL Backward::Interface)
+target_link_libraries(core PUBLIC fmt::fmt Backward::Interface)
 
 if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_set_ipo(core)

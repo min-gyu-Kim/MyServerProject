@@ -5,14 +5,15 @@
 #include <cstdint>
 #include <cstring>
 #include <fmt/core.h>
-#include <string>
 #include <sys/socket.h>
 #include <unistd.h>
 
+// NOLINTBEGIN(performance-enum-size)
 enum class eMessageID : int16_t
 {
     EchoMessage = 1,
 };
+// NOLINTEND(performance-enum-size)
 
 struct MessageHeader
 {

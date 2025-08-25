@@ -4,7 +4,6 @@
   "dependencies": [
     "catch2",
     "fmt",
-    "ms-gsl",
     "backward-cpp"
   ]
 }

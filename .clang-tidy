@@ -1,15 +1,12 @@
 Checks: >
-  modernize-*,
   readability-*,
   performance-*,
   bugprone-*,
   google-build-using-namespace,
-  cppcoreguidelines-*,
   -readability-magic-numbers,
+  -readability-redundant-access-specifiers,
   -performance-enum-size,
   -modernize-use-auto,
-  -cppcoreguidelines-pro-type-reinterpret-cast,
-  -modernize-use-trailing-return-type
 
 CheckOptions:
   # 네이밍 규칙

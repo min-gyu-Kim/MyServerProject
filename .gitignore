@@ -42,3 +42,4 @@
 
 # build file exclusions
 build/*
+.cache/*
