@@ -38,14 +38,14 @@ core::String Logger::NowIso8601()
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
     using std::chrono::system_clock;
-    const auto NOW_TIME_POINT = system_clock::now();
-    const auto CURRENT_TIME = system_clock::to_time_t(NOW_TIME_POINT);
+    const auto nowTimePoint = system_clock::now();
+    const auto currentTIme = system_clock::to_time_t(nowTimePoint);
     std::tm tmStruct{};
-    localtime_r(&CURRENT_TIME, &tmStruct);
-    const auto MILLIS =
-        duration_cast<milliseconds>(NOW_TIME_POINT.time_since_epoch()) % 1000;
+    localtime_r(&currentTIme, &tmStruct);
+    const auto millis =
+        duration_cast<milliseconds>(nowTimePoint.time_since_epoch()) % 1000;
     return fmt::format("{:%Y-%m-%dT%H:%M:%S}.{:03d}", tmStruct,
-                       static_cast<int>(MILLIS.count()));
+                       static_cast<int>(millis.count()));
 }
 
 core::String Logger::LevelToString(eLogLevel level)
@@ -84,11 +84,11 @@ eLogLevel Logger::GetLevel() const
 
 void Logger::Emit(eLogLevel level, const core::String &formattedMessage)
 {
-    const core::String TIMESTAMP = NowIso8601();
-    const core::String LOGGER_NAME = mName;
+    const core::String timestamp = NowIso8601();
+    const core::String loggerName = mName;
 
     for (const auto &sink : mSinks) {
-        sink->Write(level, TIMESTAMP, LOGGER_NAME, formattedMessage);
+        sink->Write(level, timestamp, loggerName, formattedMessage);
     }
 }
 
@@ -98,9 +98,9 @@ void ConsoleSink::Write(eLogLevel level, const core::String &timestampIso8601,
                         const core::String &formattedMessage)
 {
     const char *levelName = ToLevelName(level);
-    const bool IS_ERROR = level >= eLogLevel::Error;
+    const bool isError = level >= eLogLevel::Error;
     if (loggerName.empty()) {
-        if (IS_ERROR) {
+        if (isError) {
             fmt::print(stderr, "[{}] [{}] {}\n", timestampIso8601, levelName,
                        formattedMessage);
         }
@@ -110,7 +110,7 @@ void ConsoleSink::Write(eLogLevel level, const core::String &timestampIso8601,
         }
     }
     else {
-        if (IS_ERROR) {
+        if (isError) {
             fmt::print(stderr, "[{}] [{}] [{}] {}\n", timestampIso8601,
                        levelName, loggerName, formattedMessage);
         }
@@ -134,9 +134,9 @@ void FileSink::EnsureFileOpen()
     }
 
     // Best-effort create parent directory if present
-    const size_t SLASH_POS = mFilePath.find_last_of('/');
-    if (SLASH_POS != core::String::npos) {
-        core::String dir = mFilePath.substr(0, SLASH_POS);
+    const size_t slashPos = mFilePath.find_last_of('/');
+    if (slashPos != core::String::npos) {
+        core::String dir = mFilePath.substr(0, slashPos);
         ::mkdir(dir.c_str(), 0755);
     }
 
