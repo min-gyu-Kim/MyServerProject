@@ -50,3 +50,4 @@ AllowShortFunctionsOnASingleLine: InlineOnly
 # 빈 줄 유지 수
 MaxEmptyLinesToKeep: 1
 
+AlwaysBreakTemplateDeclarations: Yes

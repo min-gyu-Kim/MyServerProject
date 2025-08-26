@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <core/Debug.hpp>
-#include <core/core.hpp>
 
 void TestFunction1()
 {

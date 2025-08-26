@@ -7,9 +7,10 @@
 #include <vector>
 
 #include "Container.hpp"
+#include "Types.hpp"
 
 namespace core {
-enum class eLogLevel : std::uint8_t
+enum class eLogLevel : UInt8
 {
     Trace,
     Debug,
@@ -95,11 +96,13 @@ class Logger
     {
         Log(eLogLevel::Debug, fmtString, std::forward<Args>(args)...);
     }
-    template <typename... Args> void Info(const char *fmtString, Args &&...args)
+    template <typename... Args>
+    void Info(const char *fmtString, Args &&...args)
     {
         Log(eLogLevel::Info, fmtString, std::forward<Args>(args)...);
     }
-    template <typename... Args> void Warn(const char *fmtString, Args &&...args)
+    template <typename... Args>
+    void Warn(const char *fmtString, Args &&...args)
     {
         Log(eLogLevel::Warn, fmtString, std::forward<Args>(args)...);
     }
