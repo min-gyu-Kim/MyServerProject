@@ -8,6 +8,7 @@ add_library(core SHARED)
 add_library(mg::core ALIAS core)
 target_sources(core PRIVATE
     src/Logger.cpp
+    src/Scheduler_uring.cpp
 )
 target_include_directories(core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

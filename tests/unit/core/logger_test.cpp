@@ -22,26 +22,27 @@ class TestSink : public core::ILogSink
         core::String mMessage;
     };
 
-    void Write(core::eLogLevel level, const core::String &timestampIso8601,
-               const core::String &loggerName,
-               const core::String &formattedMessage) override
+    void Write(core::eLogLevel level, const core::String& timestampIso8601,
+               const core::String& loggerName, const core::String& formattedMessage) override
     {
         Entry entry{level, timestampIso8601, loggerName, formattedMessage};
         mEntries.push_back(entry);
     }
 
-    const std::vector<Entry> &Entries() const { return mEntries; }
+    const std::vector<Entry>& Entries() const
+    {
+        return mEntries;
+    }
 
   private:
     std::vector<Entry> mEntries;
 };
 
-std::string MakeTempPath(const char *prefix)
+std::string MakeTempPath(const char* prefix)
 {
-    const auto CURRENT_TIME = std::time(nullptr);
+    const auto currentTime = std::time(nullptr);
     char buf[256];
-    std::snprintf(buf, sizeof(buf), "./tmp/%s-%ld-%d.log", prefix,
-                  static_cast<long>(CURRENT_TIME),
+    std::snprintf(buf, sizeof(buf), "./tmp/%s-%ld-%d.log", prefix, static_cast<long>(currentTime),
                   static_cast<int>(::getpid()));
     return std::string(buf);
 }
@@ -60,7 +61,7 @@ TEST_CASE("Logger level filtering and custom sink", "[logger]")
     logger2.Info("info {}", 2);
     logger2.Error("error {}", 3);
 
-    const auto &entries = sink->Entries();
+    const auto& entries = sink->Entries();
     REQUIRE(entries.size() == 2);
     REQUIRE(entries[0].mLevel == core::eLogLevel::Info);
     REQUIRE(entries[1].mLevel == core::eLogLevel::Error);
@@ -69,16 +70,15 @@ TEST_CASE("Logger level filtering and custom sink", "[logger]")
 
 TEST_CASE("FileSink writes formatted lines", "[logger][file]")
 {
-    const std::string PATH = MakeTempPath("logger-test");
+    const std::string path = MakeTempPath("logger-test");
 
-    core::Logger logger(
-        "File", {std::make_shared<core::FileSink>(PATH, /*append=*/false)});
+    core::Logger logger("File", {std::make_shared<core::FileSink>(path, /*append=*/false)});
     logger.SetLevel(core::eLogLevel::Trace);
 
     logger.Info("hello {}", 123);
     logger.Warn("world");
 
-    std::ifstream inStream(PATH.c_str());
+    std::ifstream inStream(path.c_str());
     REQUIRE(inStream.good());
     std::string line1;
     std::getline(inStream, line1);
@@ -86,9 +86,7 @@ TEST_CASE("FileSink writes formatted lines", "[logger][file]")
     std::getline(inStream, line2);
     inStream.close();
 
-    REQUIRE((line1.find("[INFO]") != std::string::npos ||
-             line1.find("INFO") != std::string::npos));
+    REQUIRE((line1.find("[INFO]") != std::string::npos || line1.find("INFO") != std::string::npos));
     REQUIRE(line1.find("hello 123") != std::string::npos);
-    REQUIRE((line2.find("[WARN]") != std::string::npos ||
-             line2.find("WARN") != std::string::npos));
+    REQUIRE((line2.find("[WARN]") != std::string::npos || line2.find("WARN") != std::string::npos));
 }

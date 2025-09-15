@@ -1,53 +1,37 @@
 BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+
 Language: Cpp
+Standard: c++20
 
-# 들여쓰기
-IndentWidth: 4             # 필요시 2로 조정
-ContinuationIndentWidth: 4
-NamespaceIndentation: None
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+AlignTrailingComments: true
 
-#AccessModifierOffset: 0
-
-# 포인터 정렬 스타일
-PointerAlignment: Right
-
-# include 정렬 (예: 시스템 헤더 먼저, 이후 사용자 헤더)
-IncludeCategories:
-  - Regex: '^<.*>'
-    Priority: 1
-  - Regex: '^".*"'
-    Priority: 2
-
-# 콤마 및 괄호 스타일
-AlignAfterOpenBracket: Align
-SpaceBeforeInheritanceColon: True
-SpaceBeforeAssignmentOperators: True
-
-# 중괄호 스타일 (Allman 또는 유지)
 BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterNamespace: false
-  BeforeWhile: false
-  SplitEmptyNamespace: false
-  AfterCaseLabel: true
-  AfterClass: true
-  AfterEnum: true
-  AfterFunction: true
-  AfterObjCDeclaration: true
-  AfterStruct: true
-  AfterUnion: true
-  AfterExternBlock: true
-  BeforeCatch: true
-  BeforeElse: true
-  BeforeLambdaBody: true
-  SplitEmptyFunction: true
-  SplitEmptyRecord: true
+    AfterFunction: true
+    AfterClass: true
+    AfterControlStatement: false
+    AfterEnum: false
+    AfterNamespace: false
+    AfterStruct: true
+    BeforeCatch: false
+    BeforeElse: false
 
-# 제어 흐름 블록을 한 줄에 표현 허용 여부
-AllowShortIfStatementsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: InlineOnly
-
-# 빈 줄 유지 수
-MaxEmptyLinesToKeep: 1
-
-AlwaysBreakTemplateDeclarations: Yes
+# Multiplatform compatibility settings
+IncludeBlocks: Preserve
+SortIncludes: false
+FixNamespaceComments: true
+CompactNamespaces: false
+PointerAlignment: Left
+ReferenceAlignment: Pointer
+AccessModifierOffset: -2
+DeriveLineEnding: false
+UseCRLF: false

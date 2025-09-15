@@ -1,9 +1,5 @@
 #pragma once
 
-// Stable, frequently used headers to speed up builds
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
+#include <bits/stdc++.h>
 
 #include "core/Types.hpp"

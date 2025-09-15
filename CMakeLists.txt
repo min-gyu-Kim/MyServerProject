@@ -12,7 +12,7 @@ set(CMAKE_CXX_EXTENSIONS NO)
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_SOURCE_DIR};${CMAKE_PROJECT_NAME};ALL;/usr/lib/debug")
 
 option(ENABLE_SANITIZERS "Enable Address/Undefined Sanitizers" OFF)
-option(USE_STD_CONTAINER "Use Standard Containers" ON)
+option(NOT_USE_STD_CONTAINER "Not use Standard Containers" OFF)
 
 include(target_set_ipo)
 
@@ -21,8 +21,8 @@ if(ENABLE_SANITIZERS)
     turn_on_sanitizers()
 endif()
 
-if(USE_STD_CONTAINER)
-    add_compile_definitions(USE_STD)
+if(NOT_USE_STD_CONTAINER)
+    add_compile_definitions(NOT_USE_STD)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
