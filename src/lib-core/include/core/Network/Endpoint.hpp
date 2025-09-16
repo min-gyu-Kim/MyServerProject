@@ -9,6 +9,7 @@
 
 #include "../Types.hpp"
 #include "../Debug.hpp"
+#include "../Container.hpp"
 
 namespace core {
 
@@ -19,6 +20,7 @@ class Endpoint
 
   public:
     Endpoint(const sockaddr* addr);
+    Endpoint(eIPVersion ipVersion, const String& ipAddress, UInt16 port);
     ~Endpoint();
 
     const sockaddr* GetAddress() const

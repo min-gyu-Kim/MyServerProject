@@ -7,11 +7,11 @@ option(CORE_ENABLE_FTIME_TRACE "Enable clang -ftime-trace" OFF)
 add_library(core SHARED)
 add_library(mg::core ALIAS core)
 target_sources(core PRIVATE
-    src/Network/Acceptor.cpp
     src/Network/Endpoint.cpp
     src/Debug.cpp
     src/Logger.cpp
-    src/Scheduler_uring.cpp
+    src/Server.cpp
+    src/WorkerThreadPool.cpp
 )
 target_include_directories(core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -38,6 +38,7 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_set_ipo(core)
 endif()
 
+#[[
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_compile_options(core PRIVATE
         -fPIC
@@ -60,3 +61,4 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         target_compile_definitions(core PRIVATE DISABLE_IO_URING)
     endif()
 endif()
+]]

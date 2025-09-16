@@ -11,84 +11,97 @@
 #error "Not supported"
 #endif
 
-namespace core{
+namespace core {
 
 template <typename LockObject>
 class LockGuard final
 {
-public:
-	LockGuard(const LockObject& obj) : mObj(obj)
-	{
-		mObj->Lock();
-	}
+  public:
+    LockGuard(LockObject& obj) : mObj(&obj)
+    {
+        mObj->Lock();
+    }
 
-	~LockGuard()
-	{
-		mObj->Unlock();
-	}
-private:
-	LockObject* mObj;
+    ~LockGuard()
+    {
+        mObj->Unlock();
+    }
+
+  private:
+    LockObject* mObj;
 };
 
 class NullLock
 {
-public:
-	NullLock() = default;
-	~NullLock() = default;
+  public:
+    NullLock() = default;
+    ~NullLock() = default;
 
-	void Lock() {}
-	void Unlock() {}
-	bool TryLock() const { return true; }
+    void Lock()
+    {
+    }
+    void Unlock()
+    {
+    }
+    bool TryLock()
+    {
+        return true;
+    }
 };
 
 #if defined(__GNUC__) || defined(__clang__)
 class Mutex
 {
-public:
-	Mutex()
-	{
+  public:
+    Mutex()
+    {
+        pthread_mutexattr_t attribute;
 #if defined(DEBUG)
-		pthread_mutexattr_t attribute = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+        pthread_mutexattr_init(&attribute);
+        pthread_mutexattr_settype(&attribute, PTHREAD_MUTEX_ERRORCHECK);
 #else
-		pthread_mutexattr_t attribute = PTHREAD_MUTEX_INITIALIZER;
+        pthread_mutexattr_init(&attribute);
+        pthread_mutexattr_settype(&attribute, PTHREAD_MUTEX_NORMAL);
 #endif
-		pthread_mutex_init(&mMutex, &attribute);
-	}
+        pthread_mutex_init(&mMutex, &attribute);
+    }
 
-	~Mutex()
-	{
-		pthread_mutex_destroy(&mMutex);
-	}
+    ~Mutex()
+    {
+        pthread_mutex_destroy(&mMutex);
+    }
 
-	void Lock()
-	{
-		const Int32 result = pthread_mutex_lock(&mMutex);
+    void Lock()
+    {
+        const Int32 result = pthread_mutex_lock(&mMutex);
 #if defined(DEBUG)
-		ASSERT(result == 0, "Lock() error: {} ({})", result, strerror(result));
+        ASSERT(result == 0, fmt::format("Lock() error: {} ({})", result, strerror(result)));
+#else
+        (void)result;
 #endif
-	}
+    }
 
-	void Unlock()
-	{
-		pthread_mutex_unlock(&mMutex);
-	}
+    void Unlock()
+    {
+        pthread_mutex_unlock(&mMutex);
+    }
 
-	bool TryLock()
-	{
-		const Int32 result = pthread_mutex_trylock(&mMutex);
-		const bool isLock = (result == 0);
+    bool TryLock()
+    {
+        const Int32 result = pthread_mutex_trylock(&mMutex);
+        const bool isLock = (result == 0);
 
 #if defined(DEBUG)
-		ASSERT(result != EDEADLOCK, "TryLock() detect deadlock");
+        ASSERT(result != EDEADLOCK, "TryLock() detect deadlock");
 #endif
 
-		return isLock;
-	}
+        return isLock;
+    }
 
-private:
-	pthread_mutex_t mMutex;
+  private:
+    pthread_mutex_t mMutex;
 };
 #else
 #endif
 
-}
+} // namespace core
