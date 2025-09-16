@@ -21,14 +21,5 @@
 // clang-format on
 
 namespace core {
-void PrintBacktrace()
-{
-    backward::StackTrace stackTrace;
-    stackTrace.load_here(32);
-    backward::Printer p;
-    p.object = true;
-    p.color_mode = backward::ColorMode::always;
-    p.address = true;
-    p.print(stackTrace, stderr);
-}
+void PrintBacktrace();
 } // namespace core

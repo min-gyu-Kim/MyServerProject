@@ -6,7 +6,7 @@
 
 namespace core {
 
-class SchedulerUring : public SchedulerBase<SchedulerUring>
+class SchedulerUring
 {
   public:
     SchedulerUring();
@@ -14,9 +14,10 @@ class SchedulerUring : public SchedulerBase<SchedulerUring>
 
     void Run();
 
-    void RegistAcceptor(Acceptor* acceptor);
+    AcceptorID CreateAcceptor(const AcceptorCreateParameter& param);
 
   private:
+    bool mStop;
     pthread_mutex_t mMutex;
     io_uring mRing;
 };

@@ -29,4 +29,10 @@ using SocketFD = int;
 #elif _WIN32
 using SocketFD = SOCKET;
 #endif
+
+using AcceptorID = Int32;
+using SessionID = Int32;
+
+const SocketFD sINVALID_SOCKET_FD = -1;
+const Int32 sINVALID_ID = -1;
 } // namespace core

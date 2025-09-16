@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fmt/format.h>
 #ifdef __linux__
 #include <arpa/inet.h>
 #elif _WIN32
@@ -55,18 +56,18 @@ class Endpoint
             return 0;
         }
 
-        ASSERT(false, "Unknown address family");
+        ASSERT(false, fmt::format("Unknown address family: {}", mAddress.ss_family));
         return -1;
     }
 
     UInt16 GetPort() const
     {
         if (mAddress.ss_family == AF_INET) {
-            const sockaddr_in* addr_in = reinterpret_cast<const sockaddr_in*>(&mAddress);
-            return ntohs(addr_in->sin_port);
+            const sockaddr_in* addrIn = reinterpret_cast<const sockaddr_in*>(&mAddress);
+            return ntohs(addrIn->sin_port);
         } else if (mAddress.ss_family == AF_INET6) {
-            const sockaddr_in6* addr_in6 = reinterpret_cast<const sockaddr_in6*>(&mAddress);
-            return ntohs(addr_in6->sin6_port);
+            const sockaddr_in6* addrIn6 = reinterpret_cast<const sockaddr_in6*>(&mAddress);
+            return ntohs(addrIn6->sin6_port);
         } else {
             ASSERT(false, "Unknown address family");
             return 0;

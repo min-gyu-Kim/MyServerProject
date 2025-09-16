@@ -1,26 +1,40 @@
 #pragma once
 
+#include "Container.hpp"
+#include "Types.hpp"
+#include "Network/Endpoint.hpp"
+
 namespace core {
 
 class Acceptor;
+class IAcceptorEvent;
+class ISessionEvent;
+
+typedef struct TagAcceptorCreateParameter
+{
+  Endpoint mEndpoint;
+  Int32 mMaxSessionCount;
+  IAcceptorEvent* mAcceptHandler;
+  ISessionEvent* mSessionHandler;
+} AcceptorCreateParameter;
 
 template <typename Derived>
 class SchedulerBase
 {
-  public:
+  protected:
     SchedulerBase() : mStop(false)
     {
     }
 
+  public:
     void Run()
     {
         GetDerived().Run();
     }
 
-    void RegistAcceptor(Acceptor* acceptor)
-    {
-        GetDerived().RegistAcceptor(acceptor);
-    }
+    AcceptorID CreateAcceptor(const AcceptorCreateParameter& createParameter);
+
+    void CancelAcceptor(const AcceptorID& acceptorID);
 
   protected:
     Derived& GetDerived()

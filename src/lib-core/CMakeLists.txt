@@ -7,6 +7,9 @@ option(CORE_ENABLE_FTIME_TRACE "Enable clang -ftime-trace" OFF)
 add_library(core SHARED)
 add_library(mg::core ALIAS core)
 target_sources(core PRIVATE
+    src/Network/Acceptor.cpp
+    src/Network/Endpoint.cpp
+    src/Debug.cpp
     src/Logger.cpp
     src/Scheduler_uring.cpp
 )
