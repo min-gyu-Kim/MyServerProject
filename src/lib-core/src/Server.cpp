@@ -1,4 +1,8 @@
 #include "core/Server.hpp"
+#include "WorkerThreadPool.hpp"
+#include "ServerJob.hpp"
+
+#include <sys/epoll.h>
 
 namespace core {
 
@@ -41,7 +45,7 @@ SocketFD CreateListenSocket(const Endpoint& serverEndpoint)
 }
 } // namespace
 
-Server::Server() : mListenFD(sINVALID_SOCKET_FD), mIsRunning(false)
+Server::Server() : mListenFD(sINVALID_SOCKET_FD), mIsRunning(false), mWorkerThreadPool(nullptr)
 {
 }
 
@@ -52,8 +56,27 @@ Server::~Server()
 
 bool Server::Start(const Endpoint& serverEndpoint, size_t workerThreadCount)
 {
+    mEpollFD = epoll_create1(0);
+    if (mEpollFD == sINVALID_ID) {
+        fmt::println(stderr, "epoll_create error : {} ({})", errno, strerror(errno));
+        return false;
+    }
+
+    WorkerThreadPool* workerThreadPool = new WorkerThreadPool();
+    workerThreadPool->Start(workerThreadCount);
+    mWorkerThreadPool = workerThreadPool;
+
+    mListenFD = CreateListenSocket(serverEndpoint);
+
     mIsRunning = true;
-    mWorkerThreads.resize(workerThreadCount);
+
+    PollJob* pollJob = new PollJob(this);
+    AddJob(pollJob);
+
+    epoll_event event{};
+    event.data.ptr = new AcceptJob(this);
+    event.events = EPOLLIN | EPOLLONESHOT | EPOLLET;
+    epoll_ctl(mEpollFD, EPOLL_CTL_ADD, mListenFD, &event);
 
     return true;
 }
@@ -73,10 +96,14 @@ void Server::Stop()
         mListenFD = sINVALID_SOCKET_FD;
     }
 
-    for (pthread_t& thread : mWorkerThreads) {
-        pthread_join(thread, nullptr);
-    }
-    mWorkerThreads.clear();
+    WorkerThreadPool* threadPool = (WorkerThreadPool*)mWorkerThreadPool;
+    threadPool->Stop();
+}
+
+void Server::AddJob(IJob* job)
+{
+    WorkerThreadPool* threadPool = (WorkerThreadPool*)mWorkerThreadPool;
+    threadPool->AddJob(job);
 }
 
 void Server::CloseListenSocket()

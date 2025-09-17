@@ -1,5 +1,5 @@
-add_executable(uring_test uring_test.cpp)
-target_link_libraries(uring_test PRIVATE core)
+add_executable(test_server test_server.cpp)
+target_link_libraries(test_server PRIVATE core)
 
 find_package(fmt REQUIRED)
 

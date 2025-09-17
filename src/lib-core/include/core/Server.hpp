@@ -7,6 +7,8 @@
 #include "Network/Endpoint.hpp"
 
 namespace core {
+
+class IJob;
 class Server
 {
   public:
@@ -16,9 +18,22 @@ class Server
     bool Start(const Endpoint& serverEndpoint, size_t workerThreadCount);
     void Stop();
 
+    void AddJob(IJob* job);
+
     virtual bool OnAccepeted(const Endpoint& clientEndpoint) = 0;
-    virtual bool OnRecv(SessionID sessionID, const class Packet* packet) = 0;
+    // virtual bool OnRecv(SessionID sessionID, const class Packet* packet) = 0;
     virtual void OnDisconnected(SessionID sessionID) = 0;
+
+  public:
+    SocketFD GetListenSocket() const
+    {
+        return mListenFD;
+    }
+
+    Int32 GetEpollFD() const
+    {
+        return mEpollFD;
+    }
 
   private:
     void PollEvents();
@@ -28,7 +43,7 @@ class Server
     SocketFD mListenFD;
     Int32 mEpollFD;
     bool mIsRunning;
-    Vector<pthread_t> mWorkerThreads;
+    void* mWorkerThreadPool;
 };
 
 } // namespace core

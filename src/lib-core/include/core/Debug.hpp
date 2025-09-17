@@ -13,7 +13,7 @@
 #define DEBUG_BREAK() std::raise(SIGTRAP)
 #endif
 
-#define ASSERT(condition, message) if (!(condition)) { fmt::print(stderr, "Assertion failed: {}\nFile: {}:{}\n", message, __FILE__, __LINE__); DEBUG_BREAK(); }
+#define ASSERT(condition, message) if (!(condition)) { fmt::println(stderr, "Assertion failed: {}\nFile: {}:{}", message, __FILE__, __LINE__); DEBUG_BREAK(); }
 #else
 #define DEBUG_BREAK()
 #define ASSERT(condition, message)

@@ -11,7 +11,7 @@
 
 namespace core {
 namespace {
-const char *ToLevelName(eLogLevel level)
+const char* ToLevelName(eLogLevel level)
 {
     switch (level) {
     case eLogLevel::Trace:
@@ -42,10 +42,8 @@ core::String Logger::NowIso8601()
     const auto currentTIme = system_clock::to_time_t(nowTimePoint);
     std::tm tmStruct{};
     localtime_r(&currentTIme, &tmStruct);
-    const auto millis =
-        duration_cast<milliseconds>(nowTimePoint.time_since_epoch()) % 1000;
-    return fmt::format("{:%Y-%m-%dT%H:%M:%S}.{:03d}", tmStruct,
-                       static_cast<int>(millis.count()));
+    const auto millis = duration_cast<milliseconds>(nowTimePoint.time_since_epoch()) % 1000;
+    return fmt::format("{:%Y-%m-%dT%H:%M:%S}.{:03d}", tmStruct, static_cast<int>(millis.count()));
 }
 
 core::String Logger::LevelToString(eLogLevel level)
@@ -53,19 +51,16 @@ core::String Logger::LevelToString(eLogLevel level)
     return ToLevelName(level);
 }
 
-Logger::Logger(core::String name)
-    : mName(std::move(name)), mLevel(eLogLevel::Info)
+Logger::Logger(core::String name) : mName(std::move(name)), mLevel(eLogLevel::Info)
 {
 }
 
-Logger::Logger(core::String name,
-               const std::vector<std::shared_ptr<ILogSink>> &sinks)
+Logger::Logger(core::String name, const std::vector<std::shared_ptr<ILogSink>>& sinks)
     : mName(std::move(name)), mLevel(eLogLevel::Info), mSinks(sinks)
 {
 }
 
-Logger::Logger(core::String name,
-               std::initializer_list<std::shared_ptr<ILogSink>> sinks)
+Logger::Logger(core::String name, std::initializer_list<std::shared_ptr<ILogSink>> sinks)
     : mName(std::move(name)), mLevel(eLogLevel::Info), mSinks(sinks)
 {
 }
@@ -82,47 +77,41 @@ eLogLevel Logger::GetLevel() const
 
 // AddSink removed: sinks are immutable after construction
 
-void Logger::Emit(eLogLevel level, const core::String &formattedMessage)
+void Logger::Emit(eLogLevel level, const core::String& formattedMessage)
 {
     const core::String timestamp = NowIso8601();
     const core::String loggerName = mName;
 
-    for (const auto &sink : mSinks) {
+    for (const auto& sink : mSinks) {
         sink->Write(level, timestamp, loggerName, formattedMessage);
     }
 }
 
 // ConsoleSink
-void ConsoleSink::Write(eLogLevel level, const core::String &timestampIso8601,
-                        const core::String &loggerName,
-                        const core::String &formattedMessage)
+void ConsoleSink::Write(eLogLevel level, const core::String& timestampIso8601,
+                        const core::String& loggerName, const core::String& formattedMessage)
 {
-    const char *levelName = ToLevelName(level);
+    const char* levelName = ToLevelName(level);
     const bool isError = level >= eLogLevel::Error;
     if (loggerName.empty()) {
         if (isError) {
-            fmt::print(stderr, "[{}] [{}] {}\n", timestampIso8601, levelName,
-                       formattedMessage);
+            fmt::println(stderr, "[{}] [{}] {}", timestampIso8601, levelName, formattedMessage);
+        } else {
+            fmt::println("[{}] [{}] {}", timestampIso8601, levelName, formattedMessage);
         }
-        else {
-            fmt::print("[{}] [{}] {}\n", timestampIso8601, levelName,
-                       formattedMessage);
-        }
-    }
-    else {
+    } else {
         if (isError) {
-            fmt::print(stderr, "[{}] [{}] [{}] {}\n", timestampIso8601,
-                       levelName, loggerName, formattedMessage);
-        }
-        else {
-            fmt::print("[{}] [{}] [{}] {}\n", timestampIso8601, levelName,
-                       loggerName, formattedMessage);
+            fmt::println(stderr, "[{}] [{}] [{}] {}", timestampIso8601, levelName, loggerName,
+                         formattedMessage);
+        } else {
+            fmt::println("[{}] [{}] [{}] {}", timestampIso8601, levelName, loggerName,
+                         formattedMessage);
         }
     }
 }
 
 // FileSink
-FileSink::FileSink(const core::String &filePath, bool append)
+FileSink::FileSink(const core::String& filePath, bool append)
     : mFilePath(filePath), mAppend(append), mFileHandle(nullptr)
 {
 }
@@ -140,30 +129,27 @@ void FileSink::EnsureFileOpen()
         ::mkdir(dir.c_str(), 0755);
     }
 
-    const char *mode = mAppend ? "a" : "w";
-    std::FILE *file = std::fopen(mFilePath.c_str(), mode);
-    mFileHandle = reinterpret_cast<void *>(file);
+    const char* mode = mAppend ? "a" : "w";
+    std::FILE* file = std::fopen(mFilePath.c_str(), mode);
+    mFileHandle = reinterpret_cast<void*>(file);
 }
 
-void FileSink::Write(eLogLevel level, const core::String &timestampIso8601,
-                     const core::String &loggerName,
-                     const core::String &formattedMessage)
+void FileSink::Write(eLogLevel level, const core::String& timestampIso8601,
+                     const core::String& loggerName, const core::String& formattedMessage)
 {
-    const char *levelName = ToLevelName(level);
+    const char* levelName = ToLevelName(level);
     std::lock_guard<std::mutex> lock(mFileMutex);
     EnsureFileOpen();
     if (mFileHandle == nullptr) {
         return;
     }
 
-    std::FILE *file = reinterpret_cast<std::FILE *>(mFileHandle);
+    std::FILE* file = reinterpret_cast<std::FILE*>(mFileHandle);
     if (loggerName.empty()) {
-        fmt::print(file, "[{}] [{}] {}\n", timestampIso8601, levelName,
-                   formattedMessage);
-    }
-    else {
-        fmt::print(file, "[{}] [{}] [{}] {}\n", timestampIso8601, levelName,
-                   loggerName, formattedMessage);
+        fmt::println(file, "[{}] [{}] {}", timestampIso8601, levelName, formattedMessage);
+    } else {
+        fmt::println(file, "[{}] [{}] [{}] {}", timestampIso8601, levelName, loggerName,
+                     formattedMessage);
     }
     std::fflush(file);
 }

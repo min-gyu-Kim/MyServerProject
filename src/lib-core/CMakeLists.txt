@@ -11,6 +11,7 @@ target_sources(core PRIVATE
     src/Debug.cpp
     src/Logger.cpp
     src/Server.cpp
+    src/ServerJob.cpp
     src/WorkerThreadPool.cpp
 )
 target_include_directories(core PUBLIC

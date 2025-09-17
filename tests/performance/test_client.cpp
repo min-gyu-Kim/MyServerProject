@@ -22,8 +22,6 @@ struct MessageHeader
 
 int main()
 {
-
-    ASSERT(false, "Hello");
     int clientFd = socket(AF_INET, SOCK_STREAM, 0);
     if (clientFd == -1) {
         perror("socket");
@@ -32,7 +30,7 @@ int main()
 
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
-    const ushort port = 8888;
+    const ushort port = 7799;
     serverAddr.sin_port = htons(port);
     inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
@@ -79,11 +77,11 @@ int main()
 
             // Process the received message
             if (header.mId == eMessageID::EchoMessage) {
-                fmt::print("Received echo message: {:.*s}\n", header.mSize, recvBuffer.data());
+                fmt::println("Received echo message: {:.*s}", header.mSize, recvBuffer.data());
             }
         } else {
             // Handle unexpected message or buffer overflow attempt
-            fmt::print(stderr, "Unexpected message received or message too large\n");
+            fmt::println(stderr, "Unexpected message received or message too large");
             break;
         }
     }

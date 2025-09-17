@@ -6,7 +6,7 @@
 
 namespace core {
 
-class Job;
+class IJob;
 
 class WorkerThreadPool
 {
@@ -24,12 +24,14 @@ class WorkerThreadPool
     bool Start(size_t workerThreadCount);
     void Stop();
 
+    void AddJob(IJob* job);
+
   private:
     static void* WorkerThreadFunc(void* arg);
     void PollEvents(Int32 index);
     void WakeOneThread();
     bool Idle(const ThreadContext& context);
-    Job* PopJob();
+    IJob* PopJob();
 
   private:
     bool mIsRunning = false;
@@ -39,6 +41,6 @@ class WorkerThreadPool
     Stack<ThreadContext> mIdleThreads;
 
     Mutex mQueueMutex;
-    Queue<Job*> mJobQueue;
+    Queue<IJob*> mJobQueue;
 };
 } // namespace core

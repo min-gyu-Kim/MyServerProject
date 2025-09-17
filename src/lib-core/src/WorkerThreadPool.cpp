@@ -1,5 +1,6 @@
 #include "WorkerThreadPool.hpp"
 #include "core/Debug.hpp"
+#include "core/Job.hpp"
 
 #include <sys/eventfd.h>
 
@@ -13,14 +14,6 @@ typedef struct TagThreadParameter
 } ThreadParameter;
 
 } // namespace
-
-class Job
-{
-  public:
-    void Execute()
-    {
-    }
-};
 
 void* WorkerThreadPool::WorkerThreadFunc(void* arg)
 {
@@ -59,10 +52,21 @@ void WorkerThreadPool::Stop()
 {
     mIsRunning = false;
     for (auto& threadContext : mWorkerThreads) {
-
+        UInt64 value = 1;
+        write(threadContext.mEventFD, &value, sizeof(value));
         pthread_join(threadContext.mThreadHandle, nullptr);
     }
     mWorkerThreads.clear();
+}
+
+void WorkerThreadPool::AddJob(IJob* job)
+{
+    {
+        LockGuard<Mutex> lock(mQueueMutex);
+        mJobQueue.push(job);
+    }
+
+    WakeOneThread();
 }
 
 void WorkerThreadPool::PollEvents(Int32 index)
@@ -70,7 +74,7 @@ void WorkerThreadPool::PollEvents(Int32 index)
     ThreadContext& threadContext = mWorkerThreads[index];
 
     while (mIsRunning) {
-        Job* job = PopJob();
+        IJob* job = PopJob();
         if (nullptr == job) {
             Idle(threadContext);
             continue;
@@ -118,9 +122,18 @@ bool WorkerThreadPool::Idle(const ThreadContext& context)
     return true;
 }
 
-Job* WorkerThreadPool::PopJob()
+IJob* WorkerThreadPool::PopJob()
 {
-    return nullptr;
+    LockGuard<Mutex> lock(mQueueMutex);
+
+    if (mJobQueue.empty()) {
+        return nullptr;
+    }
+
+    IJob* retJob = mJobQueue.front();
+    mJobQueue.pop();
+
+    return retJob;
 }
 
 } // namespace core
