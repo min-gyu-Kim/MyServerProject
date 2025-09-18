@@ -62,6 +62,12 @@ bool Server::Start(const Endpoint& serverEndpoint, size_t workerThreadCount)
         return false;
     }
 
+    mSendPollFD = epoll_create1(0);
+    if (mSendPollFD == sINVALID_ID) {
+        fmt::println(stderr, "epoll_create error : {} ({})", errno, strerror(errno));
+        return false;
+    }
+
     WorkerThreadPool* workerThreadPool = new WorkerThreadPool();
     workerThreadPool->Start(workerThreadCount);
     mWorkerThreadPool = workerThreadPool;
@@ -94,6 +100,16 @@ void Server::Stop()
     if (mListenFD != sINVALID_SOCKET_FD) {
         close(mListenFD);
         mListenFD = sINVALID_SOCKET_FD;
+    }
+
+    if (mEpollFD != sINVALID_ID) {
+        close(mEpollFD);
+        mEpollFD = sINVALID_ID;
+    }
+
+    if (mSendPollFD != sINVALID_ID) {
+        close(mSendPollFD);
+        mSendPollFD = sINVALID_ID;
     }
 
     WorkerThreadPool* threadPool = (WorkerThreadPool*)mWorkerThreadPool;

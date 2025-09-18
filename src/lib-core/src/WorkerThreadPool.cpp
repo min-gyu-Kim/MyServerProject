@@ -80,7 +80,9 @@ void WorkerThreadPool::PollEvents(Int32 index)
             continue;
         }
 
-        job->Execute();
+        if (job->Execute()) {
+            job->Complete();
+        }
     }
 }
 

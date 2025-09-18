@@ -1,38 +1,73 @@
 #pragma once
 
 #include "core/Types.hpp"
+#include "core/Lock.hpp"
 #include "RecvBuffer.hpp"
+#include "../ServerJob.hpp"
 
-namespace core{
+namespace core {
 
 class Server;
 
-class Session{
-public:
-	Session() = delete;
-	Session(Server* server, SessionID sessionID, SocketFD sessionFD) :
-		mServer(server), mSessionID(sessionID), mSessionFD(sessionFD), mIsSending(false)
-	{
-		mRecvBuffer = new RecvBuffer();
-	}
+class Session
+{
+  public:
+    Session() = delete;
+    Session(Server* server, SessionID sessionID, SocketFD sessionFD)
+        : mServer(server), mSessionID(sessionID), mSessionFD(sessionFD), mIsRecving(true),
+          mIsSending(false), mRecvJob(this, server), mSendJob(this, server)
+    {
+    }
 
-	~Session()
-	{
-		delete mRecvBuffer;
-	}
+    ~Session()
+    {
+    }
 
-	SessionID GetSessionID() const { return mSessionID; }
-	SocketFD GetSocketFD() const { return mSessionFD; }
-	RecvBuffer* GetRecvBuffer() { return mRecvBuffer; }
+    SessionID GetSessionID() const
+    {
+        return mSessionID;
+    }
 
-private:
-	SessionID mSessionID;
-	SocketFD mSessionFD;
-	RecvBuffer* mRecvBuffer;
+    SocketFD GetSocketFD() const
+    {
+        return mSessionFD;
+    }
 
-	bool mIsSending;
-	//class SendPool* ;
+    RecvJob* GetRecvJob()
+    {
+        return &mRecvJob;
+    }
 
-	Server* mServer;
+    SendJob* GetSendJob()
+    {
+        return &mSendJob;
+    }
+
+    void SetReceiveState(bool state)
+    {
+        mIsRecving = state;
+    }
+
+    void SetSendState(bool state)
+    {
+        mIsSending = state;
+    }
+
+    void Disconnect();
+    void Send(Byte* buffer, size_t bufferSize);
+
+  private:
+    SessionID mSessionID;
+    SocketFD mSessionFD;
+
+    bool mIsRecving;
+    RecvJob mRecvJob;
+
+    bool mIsSending;
+    SendJob mSendJob;
+    Mutex mPacketMutex;
+    Vector<iovec> mPackets;
+
+    Server* mServer;
 };
-}
+} // namespace core

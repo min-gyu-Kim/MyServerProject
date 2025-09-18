@@ -35,6 +35,11 @@ class Server
         return mEpollFD;
     }
 
+    Int32 GetSendPollFD() const
+    {
+        return mSendPollFD;
+    }
+
   private:
     void PollEvents();
     void CloseListenSocket();
@@ -42,6 +47,7 @@ class Server
   private:
     SocketFD mListenFD;
     Int32 mEpollFD;
+    Int32 mSendPollFD;
     bool mIsRunning;
     void* mWorkerThreadPool;
 };

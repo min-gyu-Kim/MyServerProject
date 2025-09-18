@@ -4,7 +4,11 @@ namespace core {
 class IJob
 {
   public:
-    virtual void Execute()
+    virtual bool Execute()
+    {
+    }
+
+    virtual void Complete()
     {
     }
 };

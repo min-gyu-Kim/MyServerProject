@@ -8,6 +8,7 @@ add_library(core SHARED)
 add_library(mg::core ALIAS core)
 target_sources(core PRIVATE
     src/Network/Endpoint.cpp
+    src/Network/Session.cpp
     src/Debug.cpp
     src/Logger.cpp
     src/Server.cpp

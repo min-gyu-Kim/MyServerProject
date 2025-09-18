@@ -12,33 +12,64 @@
 
 namespace core {
 
+namespace {
+const Int32 sMAX_EVENTS = 126;
+}
+
 PollJob::PollJob(Server* server) : mServer(server)
 {
     ASSERT(server != nullptr, "PollJob::server pointer must be not null");
 }
 
-void PollJob::Execute()
+bool PollJob::Execute()
 {
-    epoll_event events[MAX_EVENTS];
+    epoll_event events[sMAX_EVENTS];
     Int32 epollFD = mServer->GetEpollFD();
-    do{
-        Int32 result = epoll_wait(epollFD, events, MAX_EVENTS, -1); // TODO: add timeout
+    do {
+        Int32 result = epoll_wait(epollFD, events, sMAX_EVENTS, -1);
         if (result < 0) {
-            if(EINTR == errno)
-            {
+            if (EINTR == errno) {
                 continue;
             }
-            fmt::println(stderr, "epoll_wait error code : {} ({})", errno, strerror(errno));
-        }
-        else
-        {
+            fmt::println(stderr, "PollJob epoll_wait error code : {} ({})", errno, strerror(errno));
+        } else {
             for (Int32 i = 0; i < result; ++i) {
                 mServer->AddJob((IJob*)events[i].data.ptr);
             }
         }
-    } while(false);
+    } while (false);
 
     mServer->AddJob(this);
+
+    return true;
+}
+
+SendPollJob::SendPollJob(Server* server) : mServer(server)
+{
+}
+
+bool SendPollJob::Execute()
+{
+    epoll_event events[sMAX_EVENTS];
+    Int32 epollFD = mServer->GetEpollFD();
+    do {
+        Int32 result = epoll_wait(epollFD, events, sMAX_EVENTS, -1); // TODO: add timeout
+        if (result < 0) {
+            if (EINTR == errno) {
+                continue;
+            }
+            fmt::println(stderr, "SendPollJob epoll_wait error code : {} ({})", errno,
+                         strerror(errno));
+        } else {
+            for (Int32 i = 0; i < result; ++i) {
+                mServer->AddJob((IJob*)events[i].data.ptr);
+            }
+        }
+    } while (false);
+
+    mServer->AddJob(this);
+
+    return true;
 }
 
 AcceptJob::AcceptJob(Server* server) : mServer(server)
@@ -46,7 +77,7 @@ AcceptJob::AcceptJob(Server* server) : mServer(server)
     ASSERT(server != nullptr, "AcceptJob::server pointer must be not null");
 }
 
-void AcceptJob::Execute()
+bool AcceptJob::Execute()
 {
     SocketFD listenFD = mServer->GetListenSocket();
     Int32 epollFD = mServer->GetEpollFD();
@@ -68,24 +99,39 @@ void AcceptJob::Execute()
         }
 
         Endpoint clientEndpoint((const sockaddr*)&clientAddress);
+        if (!mServer->OnAccepeted(clientEndpoint)) {
+            close(clientFD);
+            continue;
+        }
+
         // SessionID clientSession = mServer->AddSession(clientFD, clientAddress);
         Session* session = new Session(mServer, 0, clientFD);
-        Int32 flags =fcntl(clientFD, F_GETFL, 0);
+        Int32 flags = fcntl(clientFD, F_GETFL, 0);
         fcntl(clientFD, F_SETFL, flags | O_NONBLOCK);
 
         int delayZeroOpt = 1;
-        setsockopt(clientFD, SOL_SOCKET, TCP_NODELAY, (const char*)&delayZeroOpt, sizeof(delayZeroOpt));
+        setsockopt(clientFD, SOL_SOCKET, TCP_NODELAY, (const char*)&delayZeroOpt,
+                   sizeof(delayZeroOpt));
 
-        // TEST
-        mServer->OnAccepeted(clientEndpoint);
-        
-        RecvJob* recvJob = new RecvJob(session, mServer);
+        epoll_event sendEvent{};
+        sendEvent.data.ptr = session->GetSendJob();
+        sendEvent.events = EPOLLOUT | EPOLLONESHOT;
+        epoll_ctl(mServer->GetSendPollFD(), EPOLL_CTL_ADD, clientFD, &sendEvent);
 
         epoll_event recvEvent{};
-        recvEvent.data.ptr = recvJob; // TODO: change recvJob
+        recvEvent.data.ptr = session->GetRecvJob();
         recvEvent.events = EPOLLONESHOT | EPOLLIN | EPOLLET;
         epoll_ctl(epollFD, EPOLL_CTL_ADD, clientFD, &recvEvent);
+
     } while (true);
+
+    return true;
+}
+
+void AcceptJob::Complete()
+{
+    Int32 epollFD = mServer->GetEpollFD();
+    SocketFD listenFD = mServer->GetListenSocket();
 
     epoll_event event{};
     event.data.ptr = this;
@@ -93,51 +139,86 @@ void AcceptJob::Execute()
     epoll_ctl(epollFD, EPOLL_CTL_MOD, listenFD, &event);
 }
 
-RecvJob::RecvJob(Session* session, Server* server) :
-    mSession(session), mServer(server)
+RecvJob::RecvJob(Session* session, Server* server) : mSession(session), mServer(server)
 {
 }
 
-void RecvJob::Execute()
+bool RecvJob::Execute()
 {
-    RecvBuffer* buffer = mSession->GetRecvBuffer();
     do {
-        Int32 result = recv(mSession->GetSocketFD(), buffer->GetRearBufferPtr(), buffer->GetDirectWriteSize(), 0);
-        if(result == 0)
-        {
-            //close()
-            return;
-        } else if(result < 0)
-        {
-            if(EAGAIN == errno)
-            {
+        if (mSession->GetSocketFD() == sINVALID_SOCKET_FD) {
+            mSession->SetReceiveState(false);
+            mSession->Disconnect();
+            return false;
+        }
+
+        Int32 result = recv(mSession->GetSocketFD(), mRecvBuffer.GetRearBufferPtr(),
+                            mRecvBuffer.GetDirectWriteSize(), 0);
+        if (result == 0) {
+            mSession->SetReceiveState(false);
+            mSession->Disconnect();
+            return false;
+        } else if (result < 0) {
+            if (EAGAIN == errno) {
                 break;
-            }
-            else if(EINTR == errno)
-            {
-                break;
+            } else if (EINTR == errno) {
+                continue;
             }
 
             fmt::println(stderr, "recv error: {} ({})", errno, strerror(errno));
             break;
         }
 
-        buffer->MoveWriteOffset(result);
-    } while(true);
+        mRecvBuffer.MoveWriteOffset(result);
+    } while (true);
 
-    if(buffer->GetUsedSize())
-    {
-        Int32 readSize = mServer->OnRecv(mSession->GetSessionID(), buffer->GetFrontBufferPtr(), buffer->GetDIrectReadSize());
-        if(readSize > 0)
-        {
-            buffer->MoveReadOffset(readSize);
+    return true;
+}
+
+void RecvJob::Complete()
+{
+    const Int32 usedSize = mRecvBuffer.GetUsedSize();
+
+    if (usedSize > 0) {
+        const Int32 readSize =
+            mServer->OnRecv(mSession->GetSessionID(), mRecvBuffer.GetFrontBufferPtr(),
+                            mRecvBuffer.GetDIrectReadSize());
+
+        if (readSize > 0) {
+            mRecvBuffer.MoveReadOffset(readSize);
+
+            if (readSize == usedSize) {
+                mRecvBuffer.Reset();
+            }
         }
     }
 
     epoll_event event{};
     event.data.ptr = this;
     event.events = EPOLLONESHOT | EPOLLIN | EPOLLET;
-    epoll_ctl(mServer->GetEpollFD(), EPOLL_CTL_MOD, mSession->GetSocketFD(), &event);
+    if (0 != epoll_ctl(mServer->GetEpollFD(), EPOLL_CTL_MOD, mSession->GetSocketFD(), &event)) {
+        bool isValidSocket = (mSession->GetSocketFD() != sINVALID_SOCKET_FD);
+
+        if (isValidSocket) {
+            fmt::println(stderr, "epoll_ctl error : {} ({})", errno, strerror(errno));
+            return;
+        } else {
+            mSession->SetReceiveState(false);
+            mSession->Disconnect();
+        }
+    }
+}
+
+SendJob::SendJob(class Session* session, Server* server) : mSession(session), mServer(server)
+{
+}
+
+bool SendJob::Execute()
+{
+    // mSession->DoSend();
+
+    // TODO:
+    return false;
 }
 
 } // namespace core
