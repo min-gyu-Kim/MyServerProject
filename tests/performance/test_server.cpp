@@ -12,6 +12,12 @@ class TestServer : public core::Server
         return true;
     }
 
+    core::Int32 OnRecv(core::SessionID sessionID, const core::Byte* buffer, core::Int32 inputSize) override
+    {
+        printf("OnRecv size: %d\n", inputSize);
+        return inputSize;
+    }
+
     void OnDisconnected(core::SessionID sessionID) override
     {
     }

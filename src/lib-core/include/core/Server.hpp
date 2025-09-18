@@ -21,7 +21,7 @@ class Server
     void AddJob(IJob* job);
 
     virtual bool OnAccepeted(const Endpoint& clientEndpoint) = 0;
-    // virtual bool OnRecv(SessionID sessionID, const class Packet* packet) = 0;
+    virtual Int32 OnRecv(SessionID sessionID, const Byte* buffer, Int32 inputSize) = 0;
     virtual void OnDisconnected(SessionID sessionID) = 0;
 
   public:

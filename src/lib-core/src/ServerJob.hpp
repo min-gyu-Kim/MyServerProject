@@ -30,7 +30,7 @@ class AcceptJob : public IJob
   private:
     Server* mServer;
 };
-/*
+
 class RecvJob : public IJob
 {
   public:
@@ -43,5 +43,17 @@ class RecvJob : public IJob
     class Session* mSession;
     Server* mServer;
 };
-*/
+
+class SendJob : public IJob
+{
+  public:
+    SendJob() = delete;
+    SendJob(class Session* session, Server* server);
+
+    void Execute() override;
+
+  private:
+    class Session* mSession;
+};
+
 } // namespace core
