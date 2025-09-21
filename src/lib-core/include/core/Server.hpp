@@ -18,9 +18,14 @@ class Server
     bool Start(const Endpoint& serverEndpoint, size_t workerThreadCount);
     void Stop();
 
+    void Send(SessionID sessionID, const Byte* buffer, size_t bufferSize);
+
     void AddJob(IJob* job);
+    SessionID AddSession(SocketFD clientFD);
+    bool DeleteSession(SessionID sessionID);
 
     virtual bool OnAccepeted(const Endpoint& clientEndpoint) = 0;
+    virtual void OnConnected(const SessionID sessionID) = 0;
     virtual Int32 OnRecv(SessionID sessionID, const Byte* buffer, Int32 inputSize) = 0;
     virtual void OnDisconnected(SessionID sessionID) = 0;
 
@@ -50,6 +55,9 @@ class Server
     Int32 mSendPollFD;
     bool mIsRunning;
     void* mWorkerThreadPool;
+    void* mSessionGroup;
+    void* mPollJob;
+    void* mAcceptJob;
 };
 
 } // namespace core

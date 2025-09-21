@@ -1,6 +1,7 @@
 #include "core/Server.hpp"
 #include "WorkerThreadPool.hpp"
 #include "ServerJob.hpp"
+#include "Network/SessionGroup.hpp"
 
 #include <sys/epoll.h>
 
@@ -45,13 +46,35 @@ SocketFD CreateListenSocket(const Endpoint& serverEndpoint)
 }
 } // namespace
 
-Server::Server() : mListenFD(sINVALID_SOCKET_FD), mIsRunning(false), mWorkerThreadPool(nullptr)
+Server::Server()
+    : mListenFD(sINVALID_SOCKET_FD), mIsRunning(false), mWorkerThreadPool(nullptr),
+      mSessionGroup(nullptr)
 {
 }
 
 Server::~Server()
 {
     Stop();
+
+    if (mPollJob != nullptr) {
+        delete mPollJob;
+        mPollJob = nullptr;
+    }
+
+    if (mAcceptJob != nullptr) {
+        delete mAcceptJob;
+        mAcceptJob = nullptr;
+    }
+
+    if (mWorkerThreadPool != nullptr) {
+        delete mWorkerThreadPool;
+        mWorkerThreadPool = nullptr;
+    }
+
+    if (mSessionGroup != nullptr) {
+        delete mSessionGroup;
+        mSessionGroup = nullptr;
+    }
 }
 
 bool Server::Start(const Endpoint& serverEndpoint, size_t workerThreadCount)
@@ -68,6 +91,9 @@ bool Server::Start(const Endpoint& serverEndpoint, size_t workerThreadCount)
         return false;
     }
 
+    SessionGroup* sessionGroup = new SessionGroup(this, 5000);
+    mSessionGroup = sessionGroup;
+
     WorkerThreadPool* workerThreadPool = new WorkerThreadPool();
     workerThreadPool->Start(workerThreadCount);
     mWorkerThreadPool = workerThreadPool;
@@ -77,10 +103,14 @@ bool Server::Start(const Endpoint& serverEndpoint, size_t workerThreadCount)
     mIsRunning = true;
 
     PollJob* pollJob = new PollJob(this);
+    mPollJob = pollJob;
     AddJob(pollJob);
 
+    AcceptJob* acceptJob = new AcceptJob(this, sessionGroup);
+    mAcceptJob = acceptJob;
+
     epoll_event event{};
-    event.data.ptr = new AcceptJob(this);
+    event.data.ptr = acceptJob;
     event.events = EPOLLIN | EPOLLONESHOT | EPOLLET;
     epoll_ctl(mEpollFD, EPOLL_CTL_ADD, mListenFD, &event);
 
@@ -116,10 +146,33 @@ void Server::Stop()
     threadPool->Stop();
 }
 
+void Server::Send(SessionID sessionID, const Byte* buffer, size_t bufferSize)
+{
+    SessionGroup* sessionGroup = (SessionGroup*)mSessionGroup;
+    Session* session = sessionGroup->GetSession(sessionID);
+    if (session == nullptr) {
+        return;
+    }
+
+    session->Send((Byte*)buffer, bufferSize);
+}
+
 void Server::AddJob(IJob* job)
 {
     WorkerThreadPool* threadPool = (WorkerThreadPool*)mWorkerThreadPool;
     threadPool->AddJob(job);
+}
+
+SessionID Server::AddSession(SocketFD clientFD)
+{
+    SessionGroup* sessionGroup = (SessionGroup*)mSessionGroup;
+    return sessionGroup->AddSession(clientFD);
+}
+
+bool Server::DeleteSession(SessionID sessionID)
+{
+    SessionGroup* sessionGroup = (SessionGroup*)mSessionGroup;
+    return sessionGroup->DeleteSession(sessionID);
 }
 
 void Server::CloseListenSocket()

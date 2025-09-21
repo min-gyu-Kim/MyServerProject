@@ -9,6 +9,7 @@
 
 namespace core {
 class Server;
+class SessionGroup;
 
 class PollJob : public IJob
 {
@@ -37,12 +38,13 @@ class AcceptJob : public IJob
 {
   public:
     AcceptJob() = delete;
-    AcceptJob(Server* server);
+    AcceptJob(Server* server, SessionGroup* sessionGroup);
     bool Execute() override;
     void Complete() override;
 
   private:
     Server* mServer;
+    SessionGroup* mSessionGroup;
 };
 
 class RecvJob : public IJob
@@ -68,9 +70,13 @@ class SendJob : public IJob
 
     bool Execute() override;
 
+    void Reset();
+    void AddPackets(void* buffer, size_t size);
+
   private:
     class Session* mSession;
     Server* mServer;
+    Vector<iovec> mSendPackets;
 };
 
 } // namespace core

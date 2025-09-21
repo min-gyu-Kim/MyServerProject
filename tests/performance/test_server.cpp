@@ -12,14 +12,23 @@ class TestServer : public core::Server
         return true;
     }
 
-    core::Int32 OnRecv(core::SessionID sessionID, const core::Byte* buffer, core::Int32 inputSize) override
+    void OnConnected(const core::SessionID sessionID) override
     {
-        printf("OnRecv size: %d\n", inputSize);
+        printf("OnConnected! sessionID %lld\n", sessionID);
+    }
+
+    core::Int32 OnRecv(core::SessionID sessionID, const core::Byte* buffer,
+                       core::Int32 inputSize) override
+    {
+        Send(sessionID, buffer, inputSize);
+        printf("OnRecv and send. size : %d\n", inputSize);
+
         return inputSize;
     }
 
     void OnDisconnected(core::SessionID sessionID) override
     {
+        printf("OnDieconnectd. sessionID : %lld\n", sessionID);
     }
 };
 
@@ -27,7 +36,7 @@ int main()
 {
     TestServer server;
     core::Endpoint serverEndpoint(core::Endpoint::IPv4, "0.0.0.0", 7799);
-    if (!server.Start(serverEndpoint, 4)) {
+    if (!server.Start(serverEndpoint, 12)) {
         fprintf(stderr, "server start failed");
         return -1;
     }

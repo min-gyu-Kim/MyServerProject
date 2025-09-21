@@ -77,7 +77,7 @@ int main()
 
             // Process the received message
             if (header.mId == eMessageID::EchoMessage) {
-                fmt::println("Received echo message: {:.*s}", header.mSize, recvBuffer.data());
+                fmt::println("Received echo message: {}", recvBuffer.data());
             }
         } else {
             // Handle unexpected message or buffer overflow attempt

@@ -12,7 +12,9 @@ class Server;
 class Session
 {
   public:
-    Session() = delete;
+    Session() : mRecvJob(this, nullptr), mSendJob(this, nullptr)
+    {
+    }
     Session(Server* server, SessionID sessionID, SocketFD sessionFD)
         : mServer(server), mSessionID(sessionID), mSessionFD(sessionFD), mIsRecving(true),
           mIsSending(false), mRecvJob(this, server), mSendJob(this, server)
@@ -54,6 +56,7 @@ class Session
     }
 
     void Disconnect();
+    void DoSend();
     void Send(Byte* buffer, size_t bufferSize);
 
   private:

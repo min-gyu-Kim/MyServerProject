@@ -30,7 +30,7 @@ using SocketFD = int;
 using SocketFD = SOCKET;
 #endif
 
-using SessionID = Int32;
+using SessionID = Int64;
 
 const SocketFD sINVALID_SOCKET_FD = -1;
 const Int32 sINVALID_ID = -1;

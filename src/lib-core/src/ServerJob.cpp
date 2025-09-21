@@ -3,6 +3,7 @@
 #include "core/Network/Endpoint.hpp"
 #include "Network/RecvBuffer.hpp"
 #include "Network/Session.hpp"
+#include "Network/SessionGroup.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -62,7 +63,9 @@ bool SendPollJob::Execute()
                          strerror(errno));
         } else {
             for (Int32 i = 0; i < result; ++i) {
-                mServer->AddJob((IJob*)events[i].data.ptr);
+                if (events[i].data.ptr != nullptr) {
+                    mServer->AddJob((IJob*)events[i].data.ptr);
+                }
             }
         }
     } while (false);
@@ -72,9 +75,11 @@ bool SendPollJob::Execute()
     return true;
 }
 
-AcceptJob::AcceptJob(Server* server) : mServer(server)
+AcceptJob::AcceptJob(Server* server, SessionGroup* sessionGroup)
+    : mServer(server), mSessionGroup(sessionGroup)
 {
     ASSERT(server != nullptr, "AcceptJob::server pointer must be not null");
+    ASSERT(sessionGroup != nullptr, "AcceptJob::sessionGroup pointer must be not null");
 }
 
 bool AcceptJob::Execute()
@@ -104,8 +109,8 @@ bool AcceptJob::Execute()
             continue;
         }
 
-        // SessionID clientSession = mServer->AddSession(clientFD, clientAddress);
-        Session* session = new Session(mServer, 0, clientFD);
+        SessionID clientSession = mSessionGroup->AddSession(clientFD);
+        Session* session = mSessionGroup->GetSession(clientSession);
         Int32 flags = fcntl(clientFD, F_GETFL, 0);
         fcntl(clientFD, F_SETFL, flags | O_NONBLOCK);
 
@@ -114,7 +119,7 @@ bool AcceptJob::Execute()
                    sizeof(delayZeroOpt));
 
         epoll_event sendEvent{};
-        sendEvent.data.ptr = session->GetSendJob();
+        sendEvent.data.ptr = nullptr;
         sendEvent.events = EPOLLOUT | EPOLLONESHOT;
         epoll_ctl(mServer->GetSendPollFD(), EPOLL_CTL_ADD, clientFD, &sendEvent);
 
@@ -123,6 +128,7 @@ bool AcceptJob::Execute()
         recvEvent.events = EPOLLONESHOT | EPOLLIN | EPOLLET;
         epoll_ctl(epollFD, EPOLL_CTL_ADD, clientFD, &recvEvent);
 
+        mServer->OnConnected(clientSession);
     } while (true);
 
     return true;
@@ -215,10 +221,20 @@ SendJob::SendJob(class Session* session, Server* server) : mSession(session), mS
 
 bool SendJob::Execute()
 {
-    // mSession->DoSend();
+    mSession->DoSend();
+    fmt::println("SendJob complete");
 
-    // TODO:
     return false;
+}
+
+void SendJob::Reset()
+{
+    mSendPackets.clear();
+}
+
+void SendJob::AddPackets(void* buffer, size_t size)
+{
+    mSendPackets.emplace_back(iovec{buffer, size});
 }
 
 } // namespace core
