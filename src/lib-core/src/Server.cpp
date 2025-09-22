@@ -50,6 +50,7 @@ Server::Server()
     : mListenFD(sINVALID_SOCKET_FD), mIsRunning(false), mWorkerThreadPool(nullptr),
       mSessionGroup(nullptr)
 {
+    signal(SIGPIPE, SIG_IGN);
 }
 
 Server::~Server()

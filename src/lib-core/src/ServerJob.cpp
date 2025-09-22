@@ -169,6 +169,10 @@ bool RecvJob::Execute()
                 break;
             } else if (EINTR == errno) {
                 continue;
+            } else if (EPIPE == errno || ECONNRESET == errno) {
+                mSession->SetReceiveState(false);
+                mSession->Disconnect();
+                return false;
             }
 
             fmt::println(stderr, "recv error: {} ({})", errno, strerror(errno));
