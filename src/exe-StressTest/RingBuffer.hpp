@@ -1,20 +1,19 @@
 #pragma once
 
-#include "core/Types.hpp"
-
 #include <memory.h>
 
-namespace core {
-class RecvBuffer
+namespace test {
+class RingBuffer
 {
   private:
     enum { BUFFER_SIZE = 1024 * 1024 };
 
   public:
-    RecvBuffer()
+    RingBuffer()
     {
+        Reset();
     }
-    ~RecvBuffer()
+    ~RingBuffer()
     {
     }
 
@@ -24,20 +23,20 @@ class RecvBuffer
         mRear = 0;
     }
 
-    Byte* GetBufferPtr()
+    char* GetBufferPtr()
     {
         return mBuffer;
     }
-    Byte* GetFrontBufferPtr()
+    char* GetFrontBufferPtr()
     {
         return mBuffer + mFront;
     }
-    Byte* GetRearBufferPtr()
+    char* GetRearBufferPtr()
     {
         return mBuffer + mRear;
     }
 
-    Int32 GetDirectWriteSize() const
+    int GetDirectWriteSize() const
     {
         if (mFront <= mRear) {
             return BUFFER_SIZE - mRear - 1;
@@ -46,7 +45,7 @@ class RecvBuffer
         return mFront - mRear - 1;
     }
 
-    Int32 GetDIrectReadSize() const
+    int GetDIrectReadSize() const
     {
         if (mFront <= mRear) {
             return mRear - mFront;
@@ -55,7 +54,7 @@ class RecvBuffer
         }
     }
 
-    Int32 GetUsedSize() const
+    int GetUsedSize() const
     {
         if (mFront <= mRear) {
             return mRear - mFront;
@@ -64,19 +63,19 @@ class RecvBuffer
         }
     }
 
-    Int32 GetRemainSize() const
+    int GetRemainSize() const
     {
         return BUFFER_SIZE - 1 - GetUsedSize();
     }
 
-    bool Write(const Byte* inputBuffer, Int32 size)
+    bool Write(const char* inputBuffer, int size)
     {
-        Int32 remainSize = GetRemainSize();
+        int remainSize = GetRemainSize();
         if (remainSize < size) {
             return false;
         }
 
-        Int32 directWriteSize = GetDirectWriteSize();
+        int directWriteSize = GetDirectWriteSize();
         if (size <= directWriteSize) {
             memcpy(mBuffer + mRear, inputBuffer, size);
         } else {
@@ -90,19 +89,18 @@ class RecvBuffer
         return true;
     }
 
-    Int32 Peek(Byte* readBuffer, Int32 size)
+    int Peek(char* readBuffer, int size)
     {
-        const Int32 usedSize = GetUsedSize();
-        Int32 peekSize;
+        const int usedSize = GetUsedSize();
+        int peekSize;
         if (usedSize <= size) {
             peekSize = usedSize;
         } else {
             peekSize = size;
         }
 
-        Int32 directReadSize = GetDIrectReadSize();
+        int directReadSize = GetDIrectReadSize();
         if (peekSize <= directReadSize) {
-            // TODO: optimize check
             memcpy(readBuffer, mBuffer + mFront, peekSize);
         } else {
             memcpy(readBuffer, mBuffer + mFront, directReadSize);
@@ -112,30 +110,30 @@ class RecvBuffer
         return peekSize;
     }
 
-    Int32 Read(Byte* readBuffer, Int32 size)
+    int Read(char* readBuffer, int size)
     {
-        Int32 peekSize = Peek(readBuffer, size);
+        int peekSize = Peek(readBuffer, size);
         mFront += peekSize;
         mFront %= BUFFER_SIZE;
 
         return peekSize;
     }
 
-    void MoveReadOffset(Int32 moveSize)
+    void MoveReadOffset(int moveSize)
     {
         mFront += moveSize;
         mFront %= BUFFER_SIZE;
     }
 
-    void MoveWriteOffset(Int32 moveSize)
+    void MoveWriteOffset(int moveSize)
     {
         mRear += moveSize;
         mRear %= BUFFER_SIZE;
     }
 
   private:
-    Int32 mFront;
-    Int32 mRear;
-    Byte mBuffer[BUFFER_SIZE];
+    int mFront;
+    int mRear;
+    char mBuffer[BUFFER_SIZE];
 };
-} // namespace core
+} // namespace test

@@ -1,117 +1,168 @@
 {
-  "version": 6,
-  "configurePresets": [
-    {
-      "name": "linux-base",
-      "hidden": true,
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;-p=${sourceDir}/build;-quiet;-config-file=${sourceDir}/.clang-tidy",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_MODULE_PATH": "${sourceDir}/cmake"
-      }
-    },
-    {
-      "name": "linux-x86",
-      "inherits": "linux-base",
-      "cacheVariables": {
-        "CMAKE_C_FLAGS": "-m32",
-        "CMAKE_CXX_FLAGS": "-m32"
-      }
-    },
-    {
-      "name": "linux-x64",
-      "inherits": "linux-base",
-      "cacheVariables": {
-        "CMAKE_C_FLAGS": "-m64",
-        "CMAKE_CXX_FLAGS": "-m64"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "build-x86-debug",
-      "configurePreset": "linux-x86",
-      "configuration": "Debug"
-    },
-    {
-      "name": "build-x86-release",
-      "configurePreset": "linux-x86",
-      "configuration": "Release"
-    },
-    {
-      "name": "build-x64-debug",
-      "configurePreset": "linux-x64",
-      "configuration": "Debug"
-    },
-    {
-      "name": "build-x64-release",
-      "configurePreset": "linux-x64",
-      "configuration": "Release"
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "test-x86-all",
-      "configurePreset": "linux-x86",
-      "configuration": "Debug"
-    },
-    {
-      "name": "test-x64-all",
-      "configurePreset": "linux-x64",
-      "configuration": "Debug"
-    }
-  ],
-  "packagePresets": [
-    {
-      "name": "package-rpm-x64-release",
-      "configurePreset": "linux-x64",
-      "generators": ["RPM"],
-      "variables": {
-        "CPACK_PACKAGE_NAME": "MyServerProject",
-        "CPACK_PACKAGE_VERSION": "1.0.0",
-        "CPACK_PACKAGE_RELEASE": "1",
-        "CPACK_RPM_PACKAGE_LICENSE": "MIT",
-        "CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST": "/usr/lib/debug",
-        "CPACK_STRIP_FILES": "ON"
-      }
-    },
-    {
-      "name": "package-rpm-x64-release-debuginfo",
-      "configurePreset": "linux-x64",
-      "generators": ["RPM"],
-      "variables": {
-        "CPACK_PACKAGE_NAME": "MyServerProject",
-        "CPACK_PACKAGE_VERSION": "1.0.0",
-        "CPACK_PACKAGE_RELEASE": "1",
-        "CPACK_RPM_PACKAGE_LICENSE": "MIT",
-        "CPACK_STRIP_FILES": "OFF"
-      }
-    }
-  ],
-  "workflowPresets": [
-    {
-      "name": "build-and-test-x64-debug",
-      "steps": [
-        {"type": "configure", "name": "linux-x64"},
-        {"type": "build", "name": "build-x64-debug"},
-        {"type": "test", "name": "test-x64-all"}
-      ]
-    },
-    {
-      "name": "build-and-test-and-packaging-x64-release",
-      "steps": [
-        {"type": "configure", "name": "linux-x64"},
-        {"type": "build", "name": "build-x64-release"},
-        {"type": "test", "name": "test-x64-all"},
-        {"type": "package", "name": "package-rpm-x64-release"},
-        {"type": "package", "name": "package-rpm-x64-release-debuginfo"}
-      ]
-    }
-  ]
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "linux-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_CXX_CLANG_TIDY": "clang-tidy;-p=${sourceDir}/build;-quiet;-config-file=${sourceDir}/.clang-tidy",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_MODULE_PATH": "${sourceDir}/cmake"
+            }
+        },
+        {
+            "name": "linux-x86",
+            "inherits": "linux-base",
+            "cacheVariables": {
+                "CMAKE_C_FLAGS": "-m32",
+                "CMAKE_CXX_FLAGS": "-m32"
+            }
+        },
+        {
+            "name": "linux-x64",
+            "inherits": "linux-base",
+            "cacheVariables": {
+                "CMAKE_C_FLAGS": "-m64",
+                "CMAKE_CXX_FLAGS": "-m64"
+            }
+        },
+        {
+            "name": "windows-x64",
+            "displayName": "Visual Studio Community 2022 Release - amd64",
+            "description": "Visual Studio 17 2022(x64 아키텍처)에 대한 컴파일러를 사용하는 중",
+            "generator": "Visual Studio 17 2022",
+            "toolset": "host=x64",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_MODULE_PATH": "${sourceDir}/cmake"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build-x86-debug",
+            "configurePreset": "linux-x86",
+            "configuration": "Debug"
+        },
+        {
+            "name": "build-x86-release",
+            "configurePreset": "linux-x86",
+            "configuration": "Release"
+        },
+        {
+            "name": "build-x64-debug",
+            "configurePreset": "linux-x64",
+            "configuration": "Debug"
+        },
+        {
+            "name": "build-x64-release",
+            "configurePreset": "linux-x64",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-x64-debug",
+            "displayName": "Visual Studio Community 2022 Release - amd64 - Debug",
+            "configurePreset": "windows-x64",
+            "configuration": "Debug"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "test-x86-all",
+            "configurePreset": "linux-x86",
+            "configuration": "Debug"
+        },
+        {
+            "name": "test-x64-all",
+            "configurePreset": "linux-x64",
+            "configuration": "Debug"
+        }
+    ],
+    "packagePresets": [
+        {
+            "name": "package-rpm-x64-release",
+            "configurePreset": "linux-x64",
+            "generators": [
+                "RPM"
+            ],
+            "variables": {
+                "CPACK_PACKAGE_NAME": "MyServerProject",
+                "CPACK_PACKAGE_VERSION": "1.0.0",
+                "CPACK_PACKAGE_RELEASE": "1",
+                "CPACK_RPM_PACKAGE_LICENSE": "MIT",
+                "CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST": "/usr/lib/debug",
+                "CPACK_STRIP_FILES": "ON"
+            }
+        },
+        {
+            "name": "package-rpm-x64-release-debuginfo",
+            "configurePreset": "linux-x64",
+            "generators": [
+                "RPM"
+            ],
+            "variables": {
+                "CPACK_PACKAGE_NAME": "MyServerProject",
+                "CPACK_PACKAGE_VERSION": "1.0.0",
+                "CPACK_PACKAGE_RELEASE": "1",
+                "CPACK_RPM_PACKAGE_LICENSE": "MIT",
+                "CPACK_STRIP_FILES": "OFF"
+            }
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "build-and-test-x64-debug",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "linux-x64"
+                },
+                {
+                    "type": "build",
+                    "name": "build-x64-debug"
+                },
+                {
+                    "type": "test",
+                    "name": "test-x64-all"
+                }
+            ]
+        },
+        {
+            "name": "build-and-test-and-packaging-x64-release",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "linux-x64"
+                },
+                {
+                    "type": "build",
+                    "name": "build-x64-release"
+                },
+                {
+                    "type": "test",
+                    "name": "test-x64-all"
+                },
+                {
+                    "type": "package",
+                    "name": "package-rpm-x64-release"
+                },
+                {
+                    "type": "package",
+                    "name": "package-rpm-x64-release-debuginfo"
+                }
+            ]
+        }
+    ]
 }
