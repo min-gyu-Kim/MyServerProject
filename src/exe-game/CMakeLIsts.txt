@@ -1,0 +1,13 @@
+add_executable(Game)
+target_sources(Game PRIVATE
+    Base/Input.cpp
+    Base/Input.hpp
+    Base/Window.cpp
+    Base/Window.hpp
+    Game/GameWindow.cpp
+    Game/GameWindow.hpp
+    Define.hpp
+    main.cpp
+)
+
+target_compile_options(Game PRIVATE /utf-8)
