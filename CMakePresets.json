@@ -35,7 +35,6 @@
         {
             "name": "windows-x64",
             "displayName": "Visual Studio Community 2022 Release - amd64",
-            "description": "Visual Studio 17 2022(x64 아키텍처)에 대한 컴파일러를 사용하는 중",
             "generator": "Visual Studio 17 2022",
             "toolset": "host=x64",
             "architecture": "x64",

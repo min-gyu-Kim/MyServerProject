@@ -158,8 +158,8 @@ bool RecvJob::Execute()
             return false;
         }
 
-        Int32 result = recv(mSession->GetSocketFD(), mRecvBuffer.GetRearBufferPtr(),
-                            mRecvBuffer.GetDirectWriteSize(), 0);
+        ssize_t result = recv(mSession->GetSocketFD(), mRecvBuffer.GetRearBufferPtr(),
+                              mRecvBuffer.GetDirectWriteSize(), 0);
         if (result == 0) {
             mSession->SetReceiveState(false);
             mSession->Disconnect();
