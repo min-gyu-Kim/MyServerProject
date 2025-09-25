@@ -13,7 +13,14 @@ class Window
 
     void Resize(SIZE windowSize);
 
+    HWND GetWindowHandle();
+    SIZE GetSize() const
+    {
+        return mSize;
+    }
+
   protected:
+    virtual void OnCreate() = 0;
     virtual void OnResize(const SIZE& windowSize) = 0;
     virtual void OnKeyDown(unsigned char keyCode) = 0;
     virtual void OnKeyUp(unsigned char keyCode) = 0;
@@ -32,6 +39,7 @@ class Window
 
   private:
     HWND mHandle;
+    SIZE mSize;
 
   private:
     static bool mIsRunning;

@@ -1,5 +1,9 @@
 add_executable(Game)
 target_sources(Game PRIVATE
+    Base/Render/GDI/Renderer.cpp
+    Base/Render/GDI/Renderer.hpp
+    Base/Render/GDI/Texture.cpp
+    Base/Render/GDI/Texture.hpp
     Base/Input.cpp
     Base/Input.hpp
     Base/Window.cpp

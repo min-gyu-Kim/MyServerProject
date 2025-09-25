@@ -47,13 +47,18 @@ bool Window::Create(SIZE windowSize, const char* title)
     ShowWindow(mHandle, SW_SHOW);
     UpdateWindow(mHandle);
 
+    this->OnCreate();
+
     return true;
 }
 
 void Window::Resize(SIZE windowSize)
 {
     assert(mHandle != INVALID_HANDLE_VALUE);
+    assert(windowSize.cx >= 0 && windowSize.cy >= 0);
     RECT clientRect = {0, 0, windowSize.cx, windowSize.cy};
+
+    mSize = windowSize;
 
     AdjustWindowRect(&clientRect, WS_OVERLAPPEDWINDOW, FALSE);
 
@@ -65,6 +70,11 @@ void Window::Resize(SIZE windowSize)
     const INT middlePositionY = (screenHeight - clientHeight) / 2;
 
     MoveWindow(mHandle, middlePositionX, middlePositionY, clientWidth, clientHeight, FALSE);
+}
+
+HWND Window::GetWindowHandle()
+{
+    return mHandle;
 }
 
 void Window::UpdateWindows()
